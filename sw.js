@@ -1,5 +1,5 @@
 /* Service Worker：离线缓存全部静态资源 */
-var CACHE = 'xq-pwa-v3';
+var CACHE = 'xq-pwa-v4';
 var ASSETS = [
   './',
   'index.html',
@@ -33,15 +33,21 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
+  // 只读本版本缓存：全局 caches.match 会按创建顺序遍历所有缓存，旧版本同名文件会赢过新版
   e.respondWith(
-    caches.match(e.request).then(function (hit) {
-      return hit || fetch(e.request).then(function (res) {
-        if (res.ok && new URL(e.request.url).origin === location.origin) {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        }
-        return res;
+    caches.open(CACHE).then(function (cache) {
+      return cache.match(e.request).then(function (hit) {
+        if (hit) return hit;
+        return fetch(e.request).then(function (res) {
+          if (res.ok && new URL(e.request.url).origin === location.origin) {
+            var copy = res.clone();
+            cache.put(e.request, copy);
+          }
+          return res;
+        });
       });
-    }).catch(function () { return caches.match('index.html'); })
+    }).catch(function () {
+      return caches.open(CACHE).then(function (cache) { return cache.match('index.html'); });
+    })
   );
 });
