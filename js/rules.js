@@ -110,7 +110,10 @@
         for (i = 0; i < 4; i++) {
           dr = DIRS4[i][0]; dc = DIRS4[i][1];
           rr = r + dr; cc = c + dc;
-          while (rr >= 0 && rr < 10 && cc >= 0 && cc < 9 && !bd[rr][cc]) { rr += dr; cc += dc; }
+          while (rr >= 0 && rr < 10 && cc >= 0 && cc < 9 && !bd[rr][cc]) {
+            out.push([rr, cc]);
+            rr += dr; cc += dc;
+          }
           if (rr < 0 || rr > 9 || cc < 0 || cc > 8) continue;
           rr += dr; cc += dc;
           while (rr >= 0 && rr < 10 && cc >= 0 && cc < 9 && !bd[rr][cc]) { rr += dr; cc += dc; }
@@ -130,7 +133,7 @@
   }
 
   function attacked(bd, r, c, by) {
-    var i, dr, dc, rr, cc, dist, p, q, rr2, cc2;
+    var i, dr, dc, rr, cc, dist, p, q, rr2, cc2, lr, lc;
     for (i = 0; i < 4; i++) {
       dr = DIRS4[i][0]; dc = DIRS4[i][1];
       rr = r + dr; cc = c + dc; dist = 1;

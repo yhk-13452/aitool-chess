@@ -1,5 +1,5 @@
 /* Service Worker：离线缓存全部静态资源 */
-var CACHE = 'xq-pwa-v2';
+var CACHE = 'xq-pwa-v3';
 var ASSETS = [
   './',
   'index.html',
