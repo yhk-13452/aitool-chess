@@ -1,0 +1,11 @@
+# 根目录下的 Markdown 只有 README.md 入库，其余都是本地开发笔记
+/*.md
+!/README.md
+
+# AI 生成素材的中间产物
+vibe_images/
+
+.DS_Store
+*.local
+.env
+.env.*
