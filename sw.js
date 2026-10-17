@@ -1,5 +1,5 @@
 /* Service Worker：离线缓存全部静态资源 */
-var CACHE = 'xq-pwa-v4';
+var CACHE = 'xq-pwa-v5';
 var ASSETS = [
   './',
   'index.html',
@@ -12,6 +12,7 @@ var ASSETS = [
   'js/ai-worker.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'icons/maskable-512.png',
   'icons/apple-touch-icon.png'
 ];
 
