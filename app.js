@@ -10,10 +10,10 @@
 
   var S = {
     board: null, turn: 'r', human: 'r',
-    level: 2,
+    level: 2, pinMark: false,
     sel: null, targets: [], last: null,
     over: false, result: '', win: null, check: false,
-    history: [], thinking: false, hint: null
+    history: [], thinking: false, hint: null, pinned: {}
   };
 
   var worker = null, workerSeq = 0, pendingCb = {};
@@ -134,8 +134,24 @@
   }
 
   /* ---------- 渲染 ---------- */
+  /* 绝对牵制：该子正挡在攻击线与己方老将之间——把它抽掉老将才暴露，才算被钉 */
+  function computePinned(color) {
+    var out = {};
+    if (!R.kingSafe(S.board, color)) return out;   // 已被将军时不存在「钉」
+    for (var r = 0; r < 10; r++) for (var c = 0; c < 9; c++) {
+      var p = S.board[r][c];
+      if (!p || p.color !== color || p.type === 'K') continue;
+      S.board[r][c] = null;
+      var exposed = !R.kingSafe(S.board, color);
+      S.board[r][c] = p;
+      if (exposed) out[r + ',' + c] = true;
+    }
+    return out;
+  }
+
   function render() {
     if (!S.board) { updatePanel(); return; }
+    S.pinned = S.pinMark ? Object.assign(computePinned('r'), computePinned('b')) : {};
     var box = piecesEl;
     while (box.firstChild) box.removeChild(box.firstChild);
 
@@ -172,6 +188,13 @@
       el.style.fontSize = Math.round(CELL * .46) + 'px';
       el.textContent = R.NAMES[p.color][p.type];
       if (S.sel && S.sel[0] === r && S.sel[1] === c) el.classList.add('sel');
+      if (S.pinned[r + ',' + c]) {
+        var badge = document.createElement('span');
+        badge.className = 'pin-badge';
+        badge.textContent = '钉';
+        badge.style.fontSize = Math.round(CELL * .26) + 'px';
+        el.appendChild(badge);
+      }
       box.appendChild(el);
     }
 
@@ -207,6 +230,10 @@
     if (S.over) return S.result;
     if (S.turn !== S.human || S.thinking) return '🤖 AI 正在思考，稍等片刻…';
     var tips = [];
+    if (S.sel && S.pinned[S.sel[0] + ',' + S.sel[1]]) {
+      var sp = S.board[S.sel[0]][S.sel[1]];
+      tips.push('📌 这枚<b>' + R.NAMES[sp.color][sp.type] + '</b>正挡在己方老将的攻击线上，挪开就会暴露老将，所以一部分走法被禁。');
+    }
     if (!R.kingSafe(S.board, S.human)) {
       tips.push('⚠️ <b>你被将军了！</b>必须应将：移动将/帅、垫将、或吃掉进攻的棋子。');
     }
@@ -368,6 +395,7 @@
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({
         board: S.board, turn: S.turn, human: S.human, level: S.level,
+        pinMark: S.pinMark,
         history: S.history, last: S.last, over: S.over, result: S.result, win: S.win
       }));
     } catch (e) { /* 存储满时忽略 */ }
@@ -383,6 +411,7 @@
       if (d.human !== 'r' && d.human !== 'b') return false;
       S.board = d.board;
       S.turn = d.turn; S.human = d.human; S.level = d.level || 2;
+      S.pinMark = d.pinMark === true;
       S.history = d.history || []; S.last = d.last || null;
       S.over = !!d.over; S.result = d.result || ''; S.win = d.win || null;
       S.check = !S.over && !R.kingSafe(S.board, S.turn);
@@ -411,6 +440,7 @@
     $('#btnSettings').addEventListener('click', function () {
       setSeg('#levelSeg', 'level', String(S.level));
       setSeg('#sideSeg', 'side', S.human === 'r' ? 'red' : 'black');
+      setSeg('#pinSeg', 'pin', S.pinMark ? 'on' : 'off');
       $('#settingsMask').classList.remove('hidden');
     });
     $('#btnCloseSheet').addEventListener('click', function () {
@@ -428,6 +458,15 @@
       S.human = b.dataset.side === 'red' ? 'r' : 'b';
       setSeg('#sideSeg', 'side', b.dataset.side);
       newGame();
+    });
+
+    $('#pinSeg').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      S.pinMark = b.dataset.pin === 'on';
+      setSeg('#pinSeg', 'pin', b.dataset.pin);
+      save();
+      render();
+      toast(S.pinMark ? '已标出被钉住的棋子' : '已关闭标记');
     });
 
     $('#btnOverNew').addEventListener('click', function () {

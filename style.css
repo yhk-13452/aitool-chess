@@ -73,6 +73,16 @@ main {
 .piece.sel { box-shadow: 0 0 0 3px #facc15, 0 2px 5px rgba(0, 0, 0, .35); }
 .piece.last-src { opacity: .55; }
 
+/* 绝对牵制标记：挡在己方老将攻击线上的棋子 */
+.pin-badge {
+  position: absolute; top: -10%; right: -10%;
+  width: 52%; height: 52%; border-radius: 50%;
+  background: #7c3aed; color: #fff;
+  border: 1.5px solid #fdf6e3;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; line-height: 1;
+}
+
 .dot, .cap-ring, .hint-ring, .last-ring {
   position: absolute; border-radius: 50%; pointer-events: none;
 }
